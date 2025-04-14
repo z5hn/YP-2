@@ -1,25 +1,29 @@
-def combinationSum2(candidates, target):
-    candidates.sort()  # Сортируем
+def comb(candidates, target):
+    candidates.sort()
     result = []
 
-    def backtrack(start, target, path):
+    def back(start, target, path):
         if target == 0:
             result.append(path)
             return
-        for i in range(start, len(candidates)):  # Пропускаем одинаковые элементы
+
+        for i in range(start, len(candidates)):
             if i > start and candidates[i] == candidates[i - 1]:
                 continue
+
             if candidates[i] > target:
                 break
-            backtrack(i + 1, target - candidates[i], path + [candidates[i]])  # Рекурсивный вызов
 
-    backtrack(0, target, [])
+            back(i + 1, target - candidates[i], path + [candidates[i]])
+
+    back(0, target, [])
     return result
 
-candidates = [5, 5, 2, 1, 2]
-target = 5
-print(combinationSum2(candidates, target))
 
-candidates = [10, 1, 2, 8, 6, 1, 5]
+candidates = [5, 5, 2, 1,3]
+target = 5
+print(comb(candidates, target))
+
+candidates = [10, 1, 8, 7, 6, 1, 5]
 target = 8
-print(combinationSum2(candidates, target))
+print(comb(candidates, target))
