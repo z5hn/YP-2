@@ -23,8 +23,8 @@ def send_welcome(message):
                           "/add (+/-) сумма, описание \n"
                           "/balance — показать текущий баланс\n"
                           "/history — история операций\n"
-                          "/clear — очистить историю и сбросить баланс\n"
-                          "/total — общую сумму доходов и расходов")
+                          "/total — общую сумму доходов и расходов\n"
+                          "/clear — очистить историю и сбросить баланс")
 
 # Команда /add
 @bot.message_handler(commands=['add'])
@@ -73,7 +73,7 @@ def show_balance(message):
 def show_history(message):
     user_id = message.from_user.id
     if user_id not in user_data or not user_data[user_id]["history"]:
-        bot.reply_to(message, "История пуста.")
+        bot.reply_to(message, "🗑 История пуста.")
         return
 
     history_text = "🧾 История операций:\n"
@@ -94,14 +94,14 @@ def clear_history(message):
         user_data[user_id]["history"] = []
         bot.reply_to(message, "🧹 История очищена. Баланс сброшен до 0.")
     else:
-        bot.reply_to(message, "Нет данных для очистки.")
+        bot.reply_to(message, "🧹 Нет данных для очистки.")
 
 # Команда /total
 @bot.message_handler(commands=['total'])
 def show_totals(message):
     user_id = message.from_user.id
     if user_id not in user_data or not user_data[user_id]["history"]:
-        bot.reply_to(message, "Нет данных.")
+        bot.reply_to(message, "🗑 Нет данных.")
         return
 
     income = sum(entry["amount"] for entry in user_data[user_id]["history"] if entry["amount"] >= 0)
