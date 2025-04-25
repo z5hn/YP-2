@@ -5,6 +5,18 @@ bot = telebot.TeleBot(TOKEN)
 
 user_data = {}
 
+def create_keyboard():
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button1 = telebot.types.KeyboardButton("/balance")
+    button2 = telebot.types.KeyboardButton("/history")
+    button3 = telebot.types.KeyboardButton("/total")
+    button4 = telebot.types.KeyboardButton("/clear")
+    button5 = telebot.types.KeyboardButton("Добавить операцию (сумма, описание)")  # Кнопка для /add
+
+    markup.add(button1, button2, button3, button4, button5)
+    return markup
+
+
 # Команда /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -18,31 +30,36 @@ def send_welcome(message):
     gif_id = "https://99px.ru/sstorage/86/2020/02/11102201155383879.gif"
     bot.send_animation(message.chat.id, gif_id)
 
+    markup = create_keyboard()
     bot.reply_to(message, "Привет! Я бот учёта бюджета 💰\n\n"
-                          "Доступные команды: \n"
-                          "/add (+/-) сумма, описание \n"
-                          "/balance — показать текущий баланс\n"
-                          "/history — история операций\n"
-                          "/total — общую сумму доходов и расходов\n"
-                          "/clear — очистить историю и сбросить баланс")
+                          "Доступные команды:", reply_markup=markup)
 
-# Команда /add
-@bot.message_handler(commands=['add'])
+
+# команда /add
+@bot.message_handler(func=lambda message: message.text == "Добавить операцию (сумма, описание)")
+def ask_for_add(message):
+    bot.reply_to(message, "Введите сумму и описание операции, например: '+500 подработка', или '-200 кофе'.")
+
+
+
+
+@bot.message_handler(func=lambda message: message.text.startswith(('+', '-')))
 def add_transaction(message):
     user_id = message.from_user.id
     if user_id not in user_data:
-        user_data[user_id] = {
+        user_data[user_id] = \
+        {
             "balance": 0,
             "history": []
         }
 
     try:
-        parts = message.text.split(maxsplit=2)
-        if len(parts) < 3:
-            raise ValueError("Неверный формат. Используй: /add (+/-) сумма, описание")
+        parts = message.text.split(maxsplit=1)
+        if len(parts) < 2:
+            raise ValueError("Неверный формат. Используй: сумма, описание")
 
-        amount = float(parts[1])
-        description = parts[2]
+        amount = float(parts[0])
+        description = parts[1]
 
         user_data[user_id]["balance"] += amount
         (user_data[user_id]["history"].append
@@ -52,9 +69,13 @@ def add_transaction(message):
         }))
 
         sign = "доход" if amount > 0 else "расход"
-        bot.reply_to(message, f"✅ {sign} на {abs(amount)}₽ добавлен: {description}")
-    except Exception as s:
-        bot.reply_to(message, f"⚠️ Ошибка: {str(s)}")
+        bot.reply_to(message, f"✅ {sign} на {abs(amount)}₽ добавлен:  {description}")
+    except Exception as e:
+        bot.reply_to(message, f"⚠️ Ошибка: Неверный формат. Используй: сумма, описание")
+
+
+    markup = create_keyboard()
+    bot.send_message(message.chat.id, "Выберите команду:", reply_markup=markup)
 
 
 # Команда /balance
@@ -67,6 +88,10 @@ def show_balance(message):
 
     balance = user_data[user_id]["balance"]
     bot.reply_to(message, f"💰 Текущий баланс: {balance:.2f}₽")
+
+    markup = create_keyboard()
+    bot.send_message(message.chat.id, "Выберите команду:", reply_markup=markup)
+
 
 # Команда /history
 @bot.message_handler(commands=['history'])
@@ -85,6 +110,10 @@ def show_history(message):
 
     bot.reply_to(message, history_text)
 
+    markup = create_keyboard()
+    bot.send_message(message.chat.id, "Выберите команду:", reply_markup=markup)
+
+
 # Команда /clear
 @bot.message_handler(commands=['clear'])
 def clear_history(message):
@@ -95,6 +124,10 @@ def clear_history(message):
         bot.reply_to(message, "🧹 История очищена. Баланс сброшен до 0.")
     else:
         bot.reply_to(message, "🧹 Нет данных для очистки.")
+
+    markup = create_keyboard()
+    bot.send_message(message.chat.id, "Выберите команду:", reply_markup=markup)
+
 
 # Команда /total
 @bot.message_handler(commands=['total'])
@@ -109,6 +142,9 @@ def show_totals(message):
 
     bot.reply_to(message, f"📊 Всего доходов: +{income:.2f}₽\n"
                           f"💸 Всего расходов: {expense:.2f}₽")
+
+    markup = create_keyboard()
+    bot.send_message(message.chat.id, "Выберите команду:", reply_markup=markup)
 
 
 # Запуск бота
